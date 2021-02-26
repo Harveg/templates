@@ -1,0 +1,7 @@
+Group                   shellyht_xxxxx                "ShellyHT-XXXXX"                             (roomx)             ["Sensor"]
+Number                  shellyhtSignal_roomx_x        "Signal"                                     (shellyht_xxxxx)    ["Level"]          {channel="shelly:shellyht:shellyht_xxxxx:device#wifiSignal"}
+Number:Time             shellyhtUptime_roomx_x        "Uptime"                                     (shellyht_xxxxx)    ["OpenState"]      {channel="shelly:shellyht:shellyht_xxxxx:device#uptime"}
+Number:Temperature      shellyhtT_roomx_x             "Sensors temperature"      <temperature>     (shellyht_xxxxx)    ["Temperature"]    {channel="shelly:shellyht:shellyht_xxxxx:sensors#temperature"}
+Number:Dimensionless    shellyhtH_roomx_x             "Sensors humidity"         <humidity>        (shellyht_xxxxx)    ["Humidity"]       {channel="shelly:shellyht:shellyht_xxxxx:sensors#humidity"}
+Number:Dimensionless    shellyhtBattery_roomx_x       "Battery battery level"    <batterylevel>    (shellyht_xxxxx)    ["Energy"]         {channel="shelly:shellyht:shellyht_xxxxx:battery#batteryLevel"}
+Switch                  shellyhtBatterylow_roomx_x    "Battery low battery"      <lowbattery>      (shellyht_xxxxx)    ["LowBattery"]     {channel="shelly:shellyht:shellyht_xxxxx:battery#lowBattery"}

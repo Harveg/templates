@@ -1,0 +1,14 @@
+Group                   weather                          "Wetter Prognose"             <sun_clouds>                 ["Equipment"]
+String                  CurrentCondition                 "Wetterlage"                                  (weather)                     {channel="openweathermap:onecall:weather_api:current#condition"}
+Number:Temperature      CurrentTemperature               "Außentemperatur"                             (weather)                     {channel="openweathermap:onecall:weather_api:current#temperature"}
+Number:Dimensionless    CurrentHumidity                  "Luftfeuchtigkeit"                            (weather)                     {channel="openweathermap:onecall:weather_api:current#humidity"}
+Number:Length           CurrentRain                      "Regen"                                       (weather)                     {channel="openweathermap:onecall:weather_api:current#rain"}
+DateTime                ForecastDay5TimeStamp            "Vorhersage datum"                            (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#time-stamp"}
+Number:Temperature      ForecastDay5MinTemperature       "Minimale temperatur"                         (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#min-temperature"}
+Number:Temperature      ForecastDay5MaxTemperature       "Maximale temperatur"                         (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#max-temperature"}
+Number:Temperature      ForecastDay5ApparentDay          "Apparent day temperature"                    (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#apparent-day"}
+Number:Dimensionless    ForecastDay5Humidity             "Luftfeuchtigkeit"                            (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#humidity"}
+Number:Speed            ForecastDay5WindSpeed            "Windgeschwindigkeit"                         (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#wind-speed"}
+Number:Angle            ForecastDay5WindDirection        "Windrichtung"                                (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#wind-direction"}
+Number:Dimensionless    ForecastDay5PrecipProbability    "Probability"                                 (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#precip-probability"}
+Number:Length           ForecastDay5Rain                 "Regen"                                       (weather)                     {channel="openweathermap:onecall:weather_api:forecastDay5#rain"}

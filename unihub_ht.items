@@ -1,0 +1,11 @@
+Group                   unihub_ht_xxxxx                   "UNI-HUB-XXXXX"                            (roomx)              ["Sensor"]
+Number                  unihubDeviceWifiSignal_roomx_x    "Signal"                                   (unihub_ht_xxxxx)    ["Level"]          {channel="shelly:shellyuni:unihub_ht:device#wifiSignal"}
+Number:Time             unihubDeviceUptime_roomx_x        "Uptime"                                   (unihub_ht_xxxxx)    ["OpenState"]      {channel="shelly:shellyuni:unihub_ht:device#uptime"}
+Switch                  unihubRelay1Output_roomx_x        "Relay1 output"                            (unihub_ht_xxxxx)                       {channel="shelly:shellyuni:unihub_ht:relay1#output"}
+Number:Temperature      unihubT1_roomx_x                  "Sensors temperature1"    <temperature>    (unihub_ht_xxxxx)    ["Temperature"]    {channel="shelly:shellyuni:unihub_ht:sensors#temperature1"}
+Number:Temperature      unihubT2_roomx_x                  "Sensors temperature2"    <temperature>    (unihub_ht_xxxxx)    ["Temperature"]    {channel="shelly:shellyuni:unihub_ht:sensors#temperature2"}
+Number:Temperature      unihubT3_roomx_x                  "Sensors temperature3"    <temperature>    (unihub_ht_xxxxx)    ["Temperature"]    {channel="shelly:shellyuni:unihub_ht:sensors#temperature3"}
+Switch                  unihubRelay2Output_roomx_x        "Relay2 output"                            (unihub_ht_xxxxx)                       {channel="shelly:shellyuni:unihub_ht:relay2#output"}
+Switch                  unihubRelay1Input_roomx_x         "Relay1 input"                             (unihub_ht_xxxxx)                       {channel="shelly:shellyuni:unihub_ht:relay1#input"}
+Switch                  unihubRelay2Input_roomx_x         "Relay2 input"                             (unihub_ht_xxxxx)                       {channel="shelly:shellyuni:unihub_ht:relay2#input"}
+Number:Dimensionless    unihubH_roomx_x                   "Sensors humidity"        <humidity>       (unihub_ht_xxxxx)    ["Humidity"]       {channel="shelly:shellyuni:unihub_ht:sensors#voltage"[profile="transform:SCALE", function="transform_h.scale"]}

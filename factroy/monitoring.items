@@ -1,0 +1,8 @@
+Group       watchlist              "Watchlist Alert"    <settings>                ["Equipment"]
+Group       system                 "System settings"    <settings>                ["Equipment"]
+Switch      notification_active    "E-Mail Alarm"       <settings>    (system)
+String      mail_adress            "E-Mail Adress"      <settings>    (system)
+Switch      grafana_state          "Online"             <settings>    (system)                     {channel="network:servicedevice:grafana:online"}
+DateTime    grafana_lastseen       "Zuletzt gesehen"    <settings>    (system)                     {channel="network:servicedevice:grafana:lastseen"}
+Switch      influxdb_state         "Online"             <settings>    (system)                     {channel="network:servicedevice:influxdb:online"}
+DateTime    influxdb_lastseen      "Zuletzt gesehen"    <settings>    (system)                     {channel="network:servicedevice:influxdb:lastseen"}

@@ -1,0 +1,17 @@
+// Overarching group (Variable= "")
+Group                   indoor                         "Indoor"                   <garage_detached>
+Group                   outdoor                        "Outdoor"                  <greenhouse>                                      ["Location"]
+// Location perspective (Variable= "")
+Group                   room1                          "Raum 1"                   <garage_detached_selected>    (indoor)            ["Location"]
+Group                   room2                          "Raum 2"                   <garage_detached_selected>    (indoor)            ["Location"]
+Group                   room3                          "Raum 3"                   <garage_detached_selected>    (indoor)            ["Location"]
+
+// Equipment/Sensor perspective (*xxxxx = Thing ID)
+Group                   shellyht_xxxxx                 "ShellyHT-XXXXX"                                         (room1)             ["Sensor"]
+
+Number                  shellyht_signal_room1_1        "Signalstärke"                                           (shellyht_xxxxx)    ["Level"]          {channel="shelly:shellyht:shellyht_xxxxx:device#wifiSignal"}
+Number:Time             shellyht_uptime_room1_1        "Laufzeit"                                               (shellyht_xxxxx)    ["OpenState"]      {channel="shelly:shellyht:shellyht_xxxxx:device#uptime"}
+Number:Temperature      shellyht_t_room1_1             "Sensors temperature"                                    (shellyht_xxxxx)    ["Temperature"]    {channel="shelly:shellyht:shellyht_xxxxx:sensors#temperature"}
+Number:Dimensionless    shellyht_h_room1_1             "Sensors humidity"                                       (shellyht_xxxxx)    ["Humidity"]       {channel="shelly:shellyht:shellyht_xxxxx:sensors#humidity"}
+Number:Dimensionless    shellyht_battery_room1_1       "Battery battery level"                                  (shellyht_xxxxx)    ["Energy"]         {channel="shelly:shellyht:shellyht_xxxxx:battery#batteryLevel"}
+Switch                  shellyht_batterylow_room1_1    "Battery low battery"                                    (shellyht_xxxxx)    ["LowBattery"]     {channel="shelly:shellyht:shellyht_xxxxx:battery#lowBattery"}

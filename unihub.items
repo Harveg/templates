@@ -1,0 +1,8 @@
+Group                       unihub_xxxxx                      "UNI-HUB-XXXXX"      (roomx)           ["Sensor"]
+Number                      unihubDeviceWifiSignal_roomx_x    "Signal"             (unihub_xxxxx)    ["Level"]        {channel="shelly:shellyuni:uni_hub:device#wifiSignal"}
+Number:Time                 unihubDeviceUptime_roomx_x        "Uptime"             (unihub_xxxxx)    ["OpenState"]    {channel="shelly:shellyuni:uni_hub:device#uptime"}
+Switch                      unihubRelay1Output_roomx_x        "Relay1 output"      (unihub_xxxxx)                     {channel="shelly:shellyuni:uni_hub:relay1#output"}
+Switch                      unihubRelay2Output_roomx_x        "Relay2 output"      (unihub_xxxxx)                     {channel="shelly:shellyuni:uni_hub:relay2#output"}
+Switch                      unihubRelay1Input_roomx_x         "Relay1 input"       (unihub_xxxxx)                     {channel="shelly:shellyuni:uni_hub:relay1#input"}
+Switch                      unihubRelay2Input_roomx_x         "Relay2 input"       (unihub_xxxxx)                     {channel="shelly:shellyuni:uni_hub:relay2#input"}
+Number:ElectricPotential    unihubSensorsVoltage_roomx_x      "Sensors voltage"    (unihub_xxxxx)                     {channel="shelly:shellyuni:uni_hub:sensors#voltage"}
