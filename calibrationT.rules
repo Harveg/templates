@@ -1,32 +1,71 @@
 var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
 var HttpUtil        = Java.type("org.openhab.core.io.net.http.HttpUtil");
+var action = Java.type("org.openhab.core.model.script.actions.Things");
+
+// Want reference for
+var ItemChannelLinkRegistry = Java.type('org.openhab.core.thing.link.ItemChannelLinkRegistry');
+var ThingRegistry = Java.type('org.openhab.core.thing.ThingRegistry')
+
+// OSGI
+var Bundle = Java.type('org.osgi.framework.Bundle')
+var FrameworkUtil = Java.type('org.osgi.framework.FrameworkUtil')
+
+// Since ItemChannelLinkRegistry & ThingRegistry are in the same bundle we can use either of them
+var thingBundle = FrameworkUtil.getBundle(ItemChannelLinkRegistry.class)
+var bundleContext = thingBundle.getBundleContext()
+
+// Get Service
+var thingRegistryRef = bundleContext.getServiceReference(ThingRegistry.class)
+var thingRegistryImpl = bundleContext.getService(thingRegistryRef)
+
+// Get Service
+var itemChannelLinkRegistryRef = bundleContext.getServiceReference(ItemChannelLinkRegistry.class)
+var itemChannelLinkRegistryImpl = bundleContext.getService(itemChannelLinkRegistryRef) // Instance of ItemChannelLinkRegistry
+
 
 var last_state;
-var measurement;
+var measurement
 var offset;
 var transform_state;
 var reference_temperature;
 var IpAdress = "192.168.0.198"
-var itemname = event.itemName.slice(-7)
+var itemname = event.itemName;
+var thingconf
+
+
 var i;
 var t;
 
-for (i=0;i<5;i++){
-  if (last_state == itemRegistry.getItem('unihubH_' + itemname).getState();) {
-    tranform_state = last_state / 20;
-    reference_temperature = ((transform_state * 5 / 120) - 40);
-    for (t=1;t<4;t++){
-      var measurement = itemRegistry.getItem('unihubT' + t + '_' + itemname).getState();
-      var offset = measurement - last_state;
-      if (offset =< -1 && offset >= 1){
-        HttpUtil.executeUrl("GET", IpAdress + '/settings/adc/' + t + '/range =12', 2000);
+
+itemChannelLinkRegistryImpl.getBoundThings(event.itemName).forEach(function(thing){
+  logger.info("Thing " + thing.getLabel() + " with UID " + thing.getUID() + " is " + thing.getStatus() + thing.getConfiguration())
+})
+
+itemChannelLinkRegistryImpl.getBoundThings(event.itemName).forEach(function(thing){
+  thingconf = thing.getConfiguration()
+})
+const thingip = thingconf[1].value;
+logger.info(thingip);
+
+if (itemname.contains("unihub")) {
+  for (i=0;i<5;i++){
+    if (last_state == itemRegistry.getItem('unihubH_' + itemname).getState()) {
+      tranform_state = last_state / 20;
+      reference_temperature = ((transform_state * 5 / 120) - 40);
+      for (t=1;t<4;t++){
+        var measurement = itemRegistry.getItem('unihubT' + t + '_' + itemname).getState();
+        var offset = measurement - last_state;
+        if (offset <= -1 && offset >= 1){
+          HttpUtil.executeUrl("GET", IpAdress + '/settings/adc/' + t + '/range =12', 2000);
+          }
         }
-      }
-    break;
-  } else {
-  last_state == itemRegistry.getItem('unihubH_roomx_x').getState();
-  setTimeout(10000);
+      break;
+    } else {
+      last_state == itemRegistry.getItem('unihubH_roomx_x').getState();
+      setTimeout(10000);
     }
   }
 }
+
+
