@@ -1,0 +1,25 @@
+var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
+var ZonedDateTime = Java.type("java.time.ZonedDateTime");
+var actions = Java.type("org.openhab.core.model.script.actions.Things");
+var mailActions = actions.getActions("mail","mail:smtp:harveg");
+
+var value = event.itemName;
+var limitmax = itemRegistry.getItem(value + 'max').getState();
+var limitmin = itemRegistry.getItem(value + 'min').getState();
+var mail_adress = itemRegistry.getItem("mail_adress").getState();
+
+ if (itemRegistry.getItem("notification_active").getState() == "OFF") {
+     var success = false;
+     } else if (event.itemState >= limitmax) {
+         var message = ("Wert von " + event.itemName + " über dem Limit von: " + limitmax);
+         var success = mailActions.sendMail(mail_adress, "HARVEG monitoring Alarm", message);
+         } else if (event.itemState <= limitmin){
+             var message = ("Wert von " + event.itemName + " unter dem Limit von: " + limitmin);
+             var success = mailActions.sendMail(mail_adress, "HARVEG monitoring Alarm", message);
+             } else {
+                 var success = false;
+                }
+if (success == true) {
+    events.sendCommand("notification_active", "OFF");
+    logger.info("notification switch OFF and alarm sent to: "+mail_adress);
+}
