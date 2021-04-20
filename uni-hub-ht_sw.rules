@@ -31,9 +31,9 @@ for (t=0;t<1;t++){
         } else {                                                           // check if uni hub is online and if not send message / debug
             success = HttpUtil.executeUrl("GET", IpAdress + n + '/reboot',500);
             if (success = FALSE){
-            logger.info("Thing " + 'unihub_room' + n + " is " + offline;
+            logger.info("Thing " + 'unihub_room' + n + " is " + offline);
             } else { 
-            logger.info("Thing " + 'unihub_room' + n + " is " + rebooted;
+            logger.info("Thing " + 'unihub_room' + n + " is " + rebooted);
             }
          }
     }
