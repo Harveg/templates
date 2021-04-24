@@ -39,7 +39,7 @@ function readAnalogSensorOne(room) {
   }
     events.sendCommand(('unihubRelay1_room' + room),OFF);
     events.sendCommand(('unihubRelay2_room' + room),ON);
-    events.postUpdate(("humidity_room" + room), airHum);
+    events.sendCommand(("humidity_room" + room), airHum);
 }
 
 function readAnalogSensorTwo(room) {
@@ -55,7 +55,7 @@ function readAnalogSensorTwo(room) {
   }
     events.sendCommand(('unihubRelay2_room' + room),OFF);
     events.sendCommand(('unihubRelay1_room' + room),ON);
-    events.postUpdate(("temperature_room" + room), airTemp);
+    events.sendCommand(("temperature_room" + room), airTemp);
 }
 
 function rebootUnihub(room){
