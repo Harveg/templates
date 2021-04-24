@@ -1,48 +1,71 @@
 var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
-var HttpUtil = Java.type("org.openhab.core.io.net.http.HttpUtil");
-
-var last_state;
-var measurement;
-var offset = 40;
-var humidity;
-var temperature;
-var reference_temperature;
-var success = new Boolean("false");
-var IpAdress = "192.168.0.";
-
-var n = 15; // number of uni-hubs
-var t; // task 0 humidity task 1 temp task
 
 
-for (t=0;t<2;t++){
-  logger.info("task" + t);
-    for (i=1;i<n+1;i++){
-        last_state = itemRegistry.getItem('unihubADC_room' + i).getState(); // Value of Analog signal (0-5V) validate and if NULL t++
-        if (itemRegistry.getItem('unihubRelay1_room' + i).getState() == ON) { // Get relay state Uni-Hub ( channel relay1= Humidity input of Vaisala)
-          if (last_state >= 4.94){
-            humidity = 100;
-          } else {
-            humidity = (last_state / 0.05) ;
-            }
-            events.sendCommand(('unihubRelay1_room' + i),OFF);
-            events.sendCommand(('unihubRelay2_room' + i),ON);
-            events.postUpdate(("humidity_room" + i), humidity);
-            java.lang.Thread.sleep(30000);
-        } else if (itemRegistry.getItem('unihubRelay2_room' + i).getState() == ON) { // Get relay state Uni-Hub (input channel relay1= Temperature input of Vaisala)
-            temperature = (last_state / 0.04166) - offset;
-            events.sendCommand(('unihubRelay2_room' + i),OFF);
-            events.sendCommand(('unihubRelay1_room' + i),ON);
-            events.postUpdate(("temperature_room" + i), temperature);
-            java.lang.Thread.sleep(30000);
-        } else {                                                           // check if uni hub is online and if not send message / debug
-            success = HttpUtil.executeUrl("GET", IpAdress + i + '/reboot',500);
-            if (success == false){
-              logger.info("Thing " + 'unihub_room' + n + " is " + "offline");
-            } else { 
-              logger.info("Thing " + 'unihub_room' + n + " is " + "rebooted");
-            }
-         }
+var maxRoom = 1 // number of rooms to be processed
+var offset = 40 // offset of Temperature measurement vaisala 0V->0C
+
+for (room=1;room<maxRoom+1;room++){
+    if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF){
+        events.sendCommand(('unihubRelay1_room' + room),ON);
+        java.lang.Thread.sleep(20000);
     }
- }
 
+    if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+    readAnalogSensorOne(room);
+    } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
+    readAnalogSensorTwo(room);
+    }
+
+    java.lang.Thread.sleep(20000);
+
+    if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
+    readAnalogSensorTwo(room);
+    } else if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+    readAnalogSensorOne(room);
+    } else {                                                           
+    rebootUnihub(room);
+    }
+}
+  
+function readAnalogSensorOne(room) {
+  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-5V)
+  logger.info("Voltage is: " + last_state);
+  var airHum = 0;
+  if (last_state > 4.94) {
+    airHum = 100;
+  }else{
+    airHum = last_state / 0.05;
+  }
+    events.sendCommand(('unihubRelay1_room' + room),OFF);
+    events.sendCommand(('unihubRelay2_room' + room),ON);
+    events.postUpdate(("humidity_room" + room), airHum);
+}
+
+function readAnalogSensorTwo(room) {
+  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-5V)
+  logger.info("Voltage is: " + last_state);
+  var airTemp = 0;
+  var n = 0;
+  if (last_state > 5){
+    airTemp = 100;
+  }else{
+    n = last_state / 0.04166 - offset;
+    airTemp = Math.round(n * 10) / 10;
+  }
+    events.sendCommand(('unihubRelay2_room' + room),OFF);
+    events.sendCommand(('unihubRelay1_room' + room),ON);
+    events.postUpdate(("temperature_room" + room), airTemp);
+}
+
+function rebootUnihub(room){
+  var IpAdress = "192.168.250.71";
+  //var HttpUtil = Java.type("org.openhab.core.io.net.http.HttpUtil");
+  var success = "false";
+  success = sendHttpPostRequest("192.168.250.71/reboot", "application/json", {}, 3000);
+  if (success == false){
+      logger.info("Thing " + 'unihub_room' + n + " is " + "offline");
+    } else { 
+      logger.info("Thing " + 'unihub_room' + n + " is " + "rebooted");
+    }
+}
