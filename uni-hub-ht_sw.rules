@@ -1,49 +1,85 @@
 var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
+//var Things = Java.type("org.openhab.core.model.script.actions.Things");
 
+// offset of Temperature measurement vaisala 0V->0C standart vaisala measurment range -40<= x =>80
 
-var maxRoom = 1 // number of rooms to be processed
-var offset = 40 // offset of Temperature measurement vaisala 0V->0C
-
-for (room=1;room<maxRoom+1;room++){
-    if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF){
-        events.sendCommand(('unihubRelay1_room' + room),ON);
-        java.lang.Thread.sleep(20000);
-    }
-
-    if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
-    readAnalogSensorOne(room);
-    } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
-    readAnalogSensorTwo(room);
-    }
-
-    java.lang.Thread.sleep(20000);
-
-    if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
-    readAnalogSensorTwo(room);
-    } else if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
-    readAnalogSensorOne(room);
-    } else {                                                           
-    rebootUnihub(room);
-    }
+var offset = 40
+var rooms = 1
+var room;
+/* Script */
+/* -------------------------------------------------------------------------------------------------------------------------------------------------*/
+var updateSwitch = new Boolean("false");
+// Check if in all rooms at least one switch is on, if not turn one switch on
+for (room = 1; room <= rooms; room++) {
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF){
+      events.sendCommand(('unihubRelay1_room' + room),ON);
+      updateSwitch = Boolean("true");
+  }
 }
-  
-function readAnalogSensorOne(room) {
-  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-5V)
+
+// If the number of rooms is low and a update have been proceed, a delay is required to let openhab update the sensor values
+if (rooms < 10 && updateSwitch){
+  java.lang.Thread.sleep(20000);
+}
+
+// Read the first analog input of all rooms
+for (room = 1; room <= rooms; room++) {
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+    readAnalogSensorHumidity(room);
+  } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
+    readAnalogSensorTemperature(room);
+  }
+}
+
+// If the number of rooms is low a delay is required to let openhab update the sensor values
+if (rooms < 10){
+  java.lang.Thread.sleep(20000);
+}
+
+// Read the second analog input of all rooms
+for (room = 1; room <= rooms; room++) {
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+    readAnalogSensorHumidity(room);
+  } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
+    readAnalogSensorTemperature(room);
+  } else {                                                           
+    rebootUnihub(room);
+  }
+}
+
+/* Function declerations*/
+/* -------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*
+Reads the first analog sensor input of the shelly unihub. The analog input will then 
+be converted to a humidity in %. Finally, the switch is changed to read the second
+analog input. The humidity item is directly updated via post command on openhab with the
+converted humidity in this function. 
+*/
+function readAnalogSensorHumidity(room) {
+  // TODO: var offset = 40
+  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
   var airHum = 0;
-  if (last_state > 4.94) {
+  if (last_state >= 4.94) {
     airHum = 100;
   }else{
     airHum = last_state / 0.05;
   }
     events.sendCommand(('unihubRelay1_room' + room),OFF);
     events.sendCommand(('unihubRelay2_room' + room),ON);
-    events.sendCommand(("humidity_room" + room), airHum);
+    events.postUpdate(("humidity_room" + room), airHum);
 }
 
-function readAnalogSensorTwo(room) {
-  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-5V)
+/*
+Reads the second analog sensor input of the shelly unihub. The analog input will then 
+be converted to a temperature in °C. Finally, the switch is changed to read the second
+analog input.  The temperatur item is directly updated via post command on openhab with the
+converted temperatur in this function. 
+*/
+function readAnalogSensorTemperature(room) {
+  last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
   var airTemp = 0;
   var n = 0;
@@ -55,17 +91,22 @@ function readAnalogSensorTwo(room) {
   }
     events.sendCommand(('unihubRelay2_room' + room),OFF);
     events.sendCommand(('unihubRelay1_room' + room),ON);
-    events.sendCommand(("temperature_room" + room), airTemp);
+    events.postUpdate(("temperature_room" + room), airTemp);
 }
 
+/*
+Reboot the shelly unihub. 
+*/
 function rebootUnihub(room){
   var IpAdress = "192.168.250.71";
   //var HttpUtil = Java.type("org.openhab.core.io.net.http.HttpUtil");
-  var success = "false";
-  success = sendHttpPostRequest("192.168.250.71/reboot", "application/json", {}, 3000);
-  if (success == false){
-      logger.info("Thing " + 'unihub_room' + n + " is " + "offline");
+  var success = new Boolean("false");
+  //success = sendHttpPostRequest("192.168.250.71/reboot", "application/json", {}, 3000);
+  if (success){
+      logger.info("Thing " + 'unihub_room' + room + " is " + "rebooted");
     } else { 
-      logger.info("Thing " + 'unihub_room' + n + " is " + "rebooted");
+      logger.info("Thing " + 'unihub_room' + room + " is " + "offline");
     }
 }
+
+/* -------------------------------------------------------------------------------------------------------------------------------------------------*/
