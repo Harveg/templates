@@ -2,14 +2,23 @@ var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.s
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
 //var Things = Java.type("org.openhab.core.model.script.actions.Things");
 
-// offset of Temperature measurement vaisala 0V->0C standart vaisala measurment range -40<= x =>80
-
+// offset of Temperature measurement vaisala 0V->0C
+// TODO: Wieso global und nicht in Funktion definieren? Muss der nicht updated werden da ev neu referenziert worden ist?
+// Constants
+var gasConst = 8314.3
+var mol = 18.016
 var offset = 40
 var rooms = 1
 var room;
 /* Script */
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
 var updateSwitch = new Boolean("false");
+this.bool = (this.bool === undefined) ? false:this.bool;
+var decimals = 10
+if (this.bool){
+    decimals = 100;
+}
+
 // Check if in all rooms at least one switch is on, if not turn one switch on
 for (room = 1; room <= rooms; room++) {
   if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF){
@@ -47,6 +56,7 @@ for (room = 1; room <= rooms; room++) {
     rebootUnihub(room);
   }
 }
+this.bool = !this.bool;
 
 /* Function declerations*/
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -58,7 +68,6 @@ analog input. The humidity item is directly updated via post command on openhab 
 converted humidity in this function. 
 */
 function readAnalogSensorHumidity(room) {
-  // TODO: var offset = 40
   last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
   var airHum = 0;
@@ -87,7 +96,7 @@ function readAnalogSensorTemperature(room) {
     airTemp = 100;
   }else{
     n = last_state / 0.04166 - offset;
-    airTemp = Math.round(n * 10) / 10;
+    airTemp = Math.round(n * decimals) / decimals;
   }
     events.sendCommand(('unihubRelay2_room' + room),OFF);
     events.sendCommand(('unihubRelay1_room' + room),ON);
@@ -107,6 +116,20 @@ function rebootUnihub(room){
     } else { 
       logger.info("Thing " + 'unihub_room' + room + " is " + "offline");
     }
+}
+
+/*
+Calculate plant relevant climate values based on https://pulsegrow.com/blogs/learn/vpd
+Future implementation of VPD (difference between VPmeristem and VProom based on https://vpdchart.com/
+*/
+
+function calculateVPD(room){
+var meristemTemp = itemRegistry.getItem('unihubT2_room' + room).getState()
+var SVP = 610.78 * (10 ** (7.5 * meristemTemp / (meristemTemp + 237.3))); //saturation vapore pressure of plant in pascal
+var airSVP = 610.78 * (10 ** (7.5 * airTemp / (airTemp + 237.3))); //saturation vapore pressure of plant in pascal
+var VP = SVP * (1 - airHum / 100); // Vapore pressure of plant
+var VPD = airSVP * (1 - airHum / 100) - VP;
+events.postUpdate(("vpd_room" + room), VPD);
 }
 
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
