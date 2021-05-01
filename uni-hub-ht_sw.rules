@@ -70,15 +70,15 @@ converted humidity in this function.
 function readAnalogSensorHumidity(room) {
   last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
-  var airHum = 0;
+  this.airHum = 0;
   if (last_state >= 4.94) {
-    airHum = 100;
+    this.airHum = 100;
   }else{
-    airHum = last_state / 0.05;
+    this.airHum = last_state / 0.05;
   }
     events.sendCommand(('unihubRelay1_room' + room),OFF);
     events.sendCommand(('unihubRelay2_room' + room),ON);
-    events.postUpdate(("humidity_room" + room), airHum);
+    events.postUpdate(("humidity_room" + room), this.airHum);
 }
 
 /*
@@ -90,17 +90,18 @@ converted temperatur in this function.
 function readAnalogSensorTemperature(room) {
   last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
-  var airTemp = 0;
+  this.airTemp = 0;
   var n = 0;
   if (last_state > 5){
-    airTemp = 100;
+    this.airTemp = 100;
   }else{
     n = last_state / 0.04166 - offset;
-    airTemp = Math.round(n * decimals) / decimals;
+    this.airTemp = Math.round(n * decimals) / decimals;
   }
     events.sendCommand(('unihubRelay2_room' + room),OFF);
     events.sendCommand(('unihubRelay1_room' + room),ON);
-    events.postUpdate(("temperature_room" + room), airTemp);
+    events.postUpdate(("temperature_room" + room), this.airTemp);
+    calculateVPD(room);
 }
 
 /*
@@ -126,9 +127,9 @@ Future implementation of VPD (difference between VPmeristem and VProom based on 
 function calculateVPD(room){
 var meristemTemp = itemRegistry.getItem('unihubT2_room' + room).getState()
 var SVP = 610.78 * (10 ** (7.5 * meristemTemp / (meristemTemp + 237.3))); //saturation vapore pressure of plant in pascal
-var airSVP = 610.78 * (10 ** (7.5 * airTemp / (airTemp + 237.3))); //saturation vapore pressure of plant in pascal
-var VP = SVP * (1 - airHum / 100); // Vapore pressure of plant
-var VPD = airSVP * (1 - airHum / 100) - VP;
+var airSVP = 610.78 * (10 ** (7.5 * this.airTemp / (this.airTemp + 237.3))); //saturation vapore pressure of plant in pascal
+var VP = SVP * (1 - this.airHum / 100); // Vapore pressure of plant
+var VPD = airSVP * (1 - this.airHum / 100) - VP;
 events.postUpdate(("vpd_room" + room), VPD);
 }
 
