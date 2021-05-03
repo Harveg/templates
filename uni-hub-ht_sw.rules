@@ -1,27 +1,18 @@
 var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
-//var Things = Java.type("org.openhab.core.model.script.actions.Things");
+var Things = Java.type("org.openhab.core.model.script.actions.Things");
 
 // offset of Temperature measurement vaisala 0V->0C
 // TODO: Wieso global und nicht in Funktion definieren? Muss der nicht updated werden da ev neu referenziert worden ist?
-// Constants
-var gasConst = 8314.3
-var mol = 18.016
 var offset = 40
 var rooms = 1
 var room;
 /* Script */
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
 var updateSwitch = new Boolean("false");
-this.bool = (this.bool === undefined) ? false:this.bool;
-var decimals = 10
-if (this.bool){
-    decimals = 100;
-}
-
 // Check if in all rooms at least one switch is on, if not turn one switch on
 for (room = 1; room <= rooms; room++) {
-  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF){
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF && Things.getThingStatusInfo('shelly:shellyuni:unihub_ht') == ONLINE){
       events.sendCommand(('unihubRelay1_room' + room),ON);
       updateSwitch = Boolean("true");
   }
@@ -56,7 +47,6 @@ for (room = 1; room <= rooms; room++) {
     rebootUnihub(room);
   }
 }
-this.bool = !this.bool;
 
 /* Function declerations*/
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -68,17 +58,18 @@ analog input. The humidity item is directly updated via post command on openhab 
 converted humidity in this function. 
 */
 function readAnalogSensorHumidity(room) {
+  // TODO: var offset = 40
   last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
-  this.airHum = 0;
+  var airHum = 0;
   if (last_state >= 4.94) {
-    this.airHum = 100;
+    airHum = 100;
   }else{
-    this.airHum = last_state / 0.05;
+    airHum = last_state / 0.05;
   }
     events.sendCommand(('unihubRelay1_room' + room),OFF);
     events.sendCommand(('unihubRelay2_room' + room),ON);
-    events.postUpdate(("humidity_room" + room), this.airHum);
+    events.postUpdate(("humidity_room" + room), airHum);
 }
 
 /*
@@ -90,18 +81,18 @@ converted temperatur in this function.
 function readAnalogSensorTemperature(room) {
   last_state = itemRegistry.getItem('unihubADC_room' + room).getState(); // Value of Analog signal (0-3.3V)
   logger.info("Voltage is: " + last_state);
-  this.airTemp = 0;
+  var airTemp = 0;
   var n = 0;
   if (last_state > 5){
-    this.airTemp = 100;
+    airTemp = 100;
   }else{
     n = last_state / 0.04166 - offset;
-    this.airTemp = Math.round(n * decimals) / decimals;
+    airTemp = Math.round(n * 10) / 10;
   }
     events.sendCommand(('unihubRelay2_room' + room),OFF);
     events.sendCommand(('unihubRelay1_room' + room),ON);
-    events.postUpdate(("temperature_room" + room), this.airTemp);
-    calculateVPD(room);
+    events.postUpdate(("temperature_room" + room), airTemp);
+    events.postUpdate(("vpd_room"), getVapourPressureDeficit(airTemp,airHum));
 }
 
 /*
@@ -111,7 +102,7 @@ function rebootUnihub(room){
   var IpAdress = "192.168.250.71";
   //var HttpUtil = Java.type("org.openhab.core.io.net.http.HttpUtil");
   var success = new Boolean("false");
-  //success = sendHttpPostRequest("192.168.250.71/reboot", "application/json", {}, 3000);
+  success = sendHttpPostRequest("192.168.250.71/reboot", "application/json", {}, 3000);
   if (success){
       logger.info("Thing " + 'unihub_room' + room + " is " + "rebooted");
     } else { 
@@ -119,18 +110,22 @@ function rebootUnihub(room){
     }
 }
 
-/*
-Calculate plant relevant climate values based on https://pulsegrow.com/blogs/learn/vpd
-Future implementation of VPD (difference between VPmeristem and VProom based on https://vpdchart.com/
-*/
-
-function calculateVPD(room){
+function getVapourPressureDeficit(airTemp,airHum){
+var A = parseFloat('-1.0440397e4')
+var B = parseFloat('-11.29465')
+var C = parseFloat('-2.7022355e-2')
+var D = parseFloat('1.289036e-5')
+var E = parseFloat('-2.4780681e-9')
+var F = parseFloat('6.5459673')
+// Convert to °Rankine
 var meristemTemp = itemRegistry.getItem('unihubT2_room' + room).getState()
-var SVP = 610.78 * (10 ** (7.5 * meristemTemp / (meristemTemp + 237.3))); //saturation vapore pressure of plant in pascal
-var airSVP = 610.78 * (10 ** (7.5 * this.airTemp / (this.airTemp + 237.3))); //saturation vapore pressure of plant in pascal
-var VP = SVP * (1 - this.airHum / 100); // Vapore pressure of plant
-var VPD = airSVP * (1 - this.airHum / 100) - VP;
-events.postUpdate(("vpd_room" + room), VPD);
+airT_rankine = airTemp * 1.8 + 491.67;
+T_rankine = meristemTemp * 1.8 + 491.67;
+// Calculate saturated PSI
+airVP_saturated_psi = A / airT_rankine + B + C * airT_rankine + Math.pow(D * airT_rankine, 2) + E * airT_rankine + F * Math.log(airT_rankine);
+VP_saturated_psi = A / T_rankine + B + C * T_rankine + Math.pow(D * T_rankine, 2) + E * T_rankine + F * Math.log(T_rankine);
+// Convert from PSI to kPA and return
+var airVP_sat = VP_saturated_psi * 6.89476;
+return (VP_saturated_psi * 6.89476) - (airVP_sat * (airHum / 100));
 }
-
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
