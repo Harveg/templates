@@ -12,7 +12,7 @@ var room;
 var updateSwitch = new Boolean("false");
 // Check if in all rooms at least one switch is on, if not turn one switch on
 for (room = 1; room <= rooms; room++) {
-  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF && Things.getThingStatusInfo('shelly:shellyuni:unihub_ht') == ONLINE){
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == OFF && itemRegistry.getItem('unihubRelay2_room' + room).getState() == OFF && Things.getThingStatusInfo('shelly:shellyuni:unihub_ht') == "ONLINE"){
       events.sendCommand(('unihubRelay1_room' + room),ON);
       updateSwitch = Boolean("true");
   }
