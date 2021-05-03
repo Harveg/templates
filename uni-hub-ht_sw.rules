@@ -110,6 +110,7 @@ function rebootUnihub(room){
     }
 }
 
+
 function getVapourPressureDeficit(airTemp,airHum){
 var A = parseFloat('-1.0440397e4')
 var B = parseFloat('-11.29465')
@@ -118,14 +119,15 @@ var D = parseFloat('1.289036e-5')
 var E = parseFloat('-2.4780681e-9')
 var F = parseFloat('6.5459673')
 // Convert to °Rankine
-var meristemTemp = itemRegistry.getItem('unihubT2_room' + room).getState()
+var meristemTemp = itemRegistry.getItem('unihubT1_room' + room).getState()
 airT_rankine = airTemp * 1.8 + 491.67;
 T_rankine = meristemTemp * 1.8 + 491.67;
 // Calculate saturated PSI
 airVP_saturated_psi = A / airT_rankine + B + C * airT_rankine + Math.pow(D * airT_rankine, 2) + E * airT_rankine + F * Math.log(airT_rankine);
 VP_saturated_psi = A / T_rankine + B + C * T_rankine + Math.pow(D * T_rankine, 2) + E * T_rankine + F * Math.log(T_rankine);
 // Convert from PSI to kPA and return
-var airVP_sat = VP_saturated_psi * 6.89476;
-return (VP_saturated_psi * 6.89476) - (airVP_sat * (airHum / 100));
+var airVP_sat = Math.pow(Math.E, airVP_saturated_psi) * 6.89476;
+return ( Math.pow(Math.E, VP_saturated_psi) * 6.89476) - (airVP_sat * (airHum / 100));
+
 }
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
