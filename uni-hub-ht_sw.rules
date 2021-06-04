@@ -1,6 +1,6 @@
 var logger = Java.type("org.slf4j.LoggerFactory").getLogger("org.openhab.model.script.Rules.Experiments");
 var ZonedDateTime = Java.type("java.time.ZonedDateTime");
-//var Things = Java.type("org.openhab.core.model.script.actions.Things");
+var Things = Java.type("org.openhab.core.model.script.actions.Things");
 
 
 // offset of Temperature measurement vaisala 0V->0C
@@ -9,6 +9,7 @@ var ZonedDateTime = Java.type("java.time.ZonedDateTime");
 var offset = 40
 var rooms = 1
 var room;
+
 /* Script */
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
 var updateSwitch = new Boolean("false");
@@ -35,7 +36,7 @@ if (rooms < 10 && updateSwitch){
 
 // Read the first analog input of all rooms
 for (room = 1; room <= rooms; room++) {
-  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON && Things.getThingStatusInfo('shelly:shellyuni:unihub_ht_room' + room) == "ONLINE") {
     readAnalogSensorHumidity(room);
   } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
     readAnalogSensorTemperature(room);
@@ -49,7 +50,7 @@ if (rooms < 10){
 
 // Read the second analog input of all rooms
 for (room = 1; room <= rooms; room++) {
-  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON) {
+  if (itemRegistry.getItem('unihubRelay1_room' + room).getState() == ON && Things.getThingStatusInfo('shelly:shellyuni:unihub_ht_room' + room) == "ONLINE") {
     readAnalogSensorHumidity(room);
   } else if (itemRegistry.getItem('unihubRelay2_room' + room).getState() == ON) { 
     readAnalogSensorTemperature(room);
@@ -111,7 +112,7 @@ Reboot the shelly unihub.
 function rebootUnihub(room){
   var Exec = Java.type("org.openhab.core.model.script.actions.Exec");
   var Duration = Java.type('java.time.Duration');
-  var IpAdress = "192.168.0.188";
+  var IpAdress = "192.168.0.101";
   var success = new Boolean("false");
   success = Exec.executeCommandLine(Duration.ofSeconds(1),"/usr/bin/curl", "http://"+IpAdress+"/reboot")
   if (success){
@@ -128,9 +129,9 @@ Future implementation of VPD (difference between VPmeristem and VProom based on 
 
 function calculateVPD(room){
   var meristemTemp = (itemRegistry.getItem('unihubT2_room' + room).getState() + itemRegistry.getItem('unihubT1_room' + room).getState()) /2;
-  var meristemSVP = 0.613 * (Math.exp(17.502 * meristemTemp / (meristemTemp + 240.97))); //saturation vapore pressure of plant in kPa
-  var airSVP = 0.613 * (Math.exp(17.502 * this.airTemp / (this.airTemp + 240.97))); //saturation vapore pressure of plant in kPa
-  return meristemSVP - airSVP * (this.airHum / 100); // Vapore pressure deficit
+  var meristemSVP = 0.613 * (Math.exp(17.502 * meristemTemp / (meristemTemp + 240.97))); //saturation vapore pressure of plant in pascal
+  var airSVP = 0.613 * (Math.exp(17.502 * this.airTemp / (this.airTemp + 240.97))); //saturation vapore pressure of plant in pascalvar VP = SVP * (1 - airHum / 100); // Vapore pressure deficit
+  return Math.round(meristemSVP*1000 - airSVP * (this.airHum / 100)*1000)
 }
 
 /* -------------------------------------------------------------------------------------------------------------------------------------------------*/
