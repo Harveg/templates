@@ -1,0 +1,28 @@
+Group       watchlist              "Watchlist Alert"    <settings>                ["Equipment"]
+Group       system                 "System settings"    <settings>                ["Equipment"]
+Switch      notification_active    "E-Mail Alarm"       <settings>    (system)
+String      mail_adress            "E-Mail Adress"      <settings>    (system)
+Switch      grafana_state          "Online"             <settings>    (system)                     {channel="network:servicedevice:grafana:online"}
+DateTime    grafana_lastseen       "Zuletzt gesehen"    <settings>    (system)                     {channel="network:servicedevice:grafana:lastseen"}
+Switch      influxdb_state         "Online"             <settings>    (system)                     {channel="network:servicedevice:influxdb:online"}
+DateTime    influxdb_lastseen      "Zuletzt gesehen"    <settings>    (system)                     {channel="network:servicedevice:influxdb:lastseen"}
+
+// IO/Andino perspective (Set Names TBD)
+
+Switch      relay_1                "TBD"    <settings>    (system)            ["Point"]
+Switch      relay_2                "TBD"    <settings>    (system)            ["Point"]
+Switch      relay_3                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_1                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_2                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_3                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_4                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_5                "TBD"    <settings>    (system)            ["Point"]
+Switch      input_6                "TBD"    <settings>    (system)            ["Point"]
+
+Number      watering_duration         "Bewässerung Dauer"                   <settings>    (system)    ["Setpoint"]
+Number      watering_interval         "Bewässerung Interval in Tage"        <settings>    (system)    ["Setpoint"]
+Number      watering_runtime          "Bewässerung max Laufzeit"            <settings>    (system)    ["Setpoint"]
+Number      watering_duration_last    "Bewässerung Dauer letzte Sequenz"    <settings>    (system)    ["Setpoint"]
+Number      vpd_period                "Zeitraum für VPD"                    <settings>    (system)    ["Point"]
+Switch      services_state            "Zustand aller Services"              <settings>    (system)    ["Status"]
+Switch      smtp_state                "State SMTP"                          <settings>    (system)    ["Status"]
